@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hospital Information System Demonstration</title>
+  <title>Hospital - Ask Questions</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -24,6 +24,8 @@
       --btn-bg:         #ffffff;
       --btn-border:     #d0d5e0;
       --btn-hover-bg:   #f0f4f8;
+      --mic-idle:       #39ff14;
+      --mic-idle-bg:    #eafff0;
 
       --text-lg:   1.75rem;
       --text-md:   1.1rem;
@@ -45,6 +47,8 @@
       --btn-bg:         #1f2937;
       --btn-border:     #374151;
       --btn-hover-bg:   #2d3748;
+      --mic-idle:       #39ff14;
+      --mic-idle-bg:    #10331d;
     }
 
     /* ─── Base reset ─── */
@@ -126,6 +130,8 @@
     }
 
     /* ─── Video container (moved here from media row) ─── */
+    /* Fixed size always reserved, even with no active stream, so the
+       microphone button below doesn't jump when video turns on/off. */
     #videoContainer {
       display: flex;
       justify-content: center;
@@ -159,8 +165,12 @@
     }
 
     #videoPreview {
+      display: block;
+      width: 400px;
+      height: 300px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
+      background: var(--surface);
     }
 
     /* ─── Volume control ─── */
@@ -211,6 +221,33 @@
     .icon-btn.active .start-icon { display: none; }
     .icon-btn.active .stop-icon { display: block; }
 
+    /* Microphone button: bigger hit target + fluorescent green idle state */
+    #startAudioBtn.icon-btn {
+      width: 84px;
+      height: 84px;
+      padding: 18px;
+      background: var(--mic-idle-bg);
+      border-color: var(--mic-idle);
+      border-width: 2px;
+      color: var(--mic-idle);
+    }
+
+    #startAudioBtn.icon-btn:hover {
+      background: var(--mic-idle-bg);
+      border-color: var(--mic-idle);
+    }
+
+    #startAudioBtn.icon-btn svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    #startAudioBtn.icon-btn.active {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
     /* ─── Misc ─── */
     #setupJsonDisplay {
       background: var(--surface);
@@ -241,7 +278,7 @@
     </svg>
   </button>
 
-  <h1>Hospital Information System - Ask Questions</h1>
+  <h1>Hospital - Ask Questions</h1>
   <h2>Click the microphone and ask any question about the hospital.</h2>
 
     <div id="connectionStatus">Not connected <span id="debugInfo" style="display:none">Ready to connect...</span></div>
@@ -267,7 +304,7 @@
     </div>
 
     <div id="videoContainer">
-      <video id="videoPreview" autoplay playsinline muted hidden width="400"></video>
+      <video id="videoPreview" autoplay playsinline muted></video>
     </div>
 
     <div id="controlButtons">

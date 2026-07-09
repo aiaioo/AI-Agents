@@ -223,7 +223,6 @@ function disconnect() {
   elements.startAudioBtn.classList.remove("active");
   elements.startAudioBtn.title = "Start microphone";
 
-  elements.videoPreview.hidden = true;
   elements.videoPreview.srcObject = null;
 }
 
@@ -479,7 +478,6 @@ async function toggleAudio() {
         });
         state.video.isStreaming = true;
         elements.videoPreview.srcObject = video.srcObject;
-        elements.videoPreview.hidden = false;
       } catch (videoError) {
         console.error("Failed to start camera:", videoError);
       }
