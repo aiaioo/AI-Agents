@@ -77,7 +77,6 @@ function initDOM() {
     "videoPreview",
     "volume",
     "volumeValue",
-    "chatContainer",
     //"chatInput",
     //"sendBtn",
     "debugInfo",
@@ -92,14 +91,6 @@ function initDOM() {
   ids.forEach((id) => {
     elements[id] = document.getElementById(id);
   });
-}
-
-// Create reusable message element
-function createMessage(text, className = "") {
-  const div = document.createElement("div");
-  div.textContent = text;
-  if (className) div.className = className;
-  return div;
 }
 
 // Update status display
@@ -363,7 +354,7 @@ function handleMessage(message) {
 
   switch (message.type) {
     case MultimodalLiveResponseType.TEXT:
-      addMessage(message.data, "assistant");
+      addMessage(message.data);
       break;
 
     case MultimodalLiveResponseType.AUDIO:
@@ -376,20 +367,20 @@ function handleMessage(message) {
     case MultimodalLiveResponseType.INPUT_TRANSCRIPTION:
       console.log("Input transcription:", message.data);
       if (!message.data.finished) {
-        addMessage(message.data.text, "user-transcript", (append = true));
+        addMessage(message.data.text);
       }
       break;
 
     case MultimodalLiveResponseType.OUTPUT_TRANSCRIPTION:
       console.log("Output transcription:", message.data);
       if (!message.data.finished) {
-        addMessage(message.data.text, "assistant", (append = true));
+        addMessage(message.data.text);
       }
       break;
 
     case MultimodalLiveResponseType.SETUP_COMPLETE:
       console.log("Setup complete:", message.data);
-      addMessage("Ready!", "system");
+      addMessage("Ready!");
 
       // Display the setup JSON
       //if (state.client && state.client.lastSetupMessage) {
@@ -445,7 +436,7 @@ function handleMessage(message) {
 
     case MultimodalLiveResponseType.INTERRUPTED:
       console.log("Interrupted");
-      addMessage("[Interrupted]", "system");
+      addMessage("[Interrupted]");
       if (state.audio.player) state.audio.player.interrupt();
       stopAudioVisualization();
       break;
@@ -477,10 +468,10 @@ async function toggleAudio() {
       state.audio.isStreaming = true;
       elements.startAudioBtn.classList.add("active");
       elements.startAudioBtn.title = "Stop microphone";
-      addMessage("[Microphone on]", "system");
+      addMessage("[Microphone on]");
       startInputVisualization();
     } catch (error) {
-      addMessage("[Audio error: " + error.message + "]", "system");
+      addMessage("[Audio error: " + error.message + "]");
     }
   } else {
     stopInputVisualization();
@@ -488,7 +479,7 @@ async function toggleAudio() {
     state.audio.isStreaming = false;
     elements.startAudioBtn.classList.remove("active");
     elements.startAudioBtn.title = "Start microphone";
-    addMessage("[Microphone off]", "system");
+    addMessage("[Microphone off]");
     disconnect();
   }
 }
@@ -514,12 +505,12 @@ async function toggleVideo() {
         elements.videoPreview.hidden = false;
         elements.startVideoBtn.classList.add("active");
         elements.startVideoBtn.title = "Stop camera";
-        addMessage("[Camera on]", "system");
+        addMessage("[Camera on]");
       } else {
-        addMessage("[Connect to Gemini first]", "system");
+        addMessage("[Connect to Gemini first]");
       }
     } catch (error) {
-      addMessage("[Video error: " + error.message + "]", "system");
+      addMessage("[Video error: " + error.message + "]");
     }
   } else {
     if (state.video.streamer) state.video.streamer.stop();
@@ -529,7 +520,7 @@ async function toggleVideo() {
     elements.videoPreview.hidden = true;
     elements.startVideoBtn.classList.remove("active");
     elements.startVideoBtn.title = "Start camera";
-    addMessage("[Camera off]", "system");
+    addMessage("[Camera off]");
   }
 }
 
@@ -539,31 +530,17 @@ function sendMessage() {
   if (!message) return;
 
   if (state.client) {
-    addMessage(message, "user");
+    addMessage(message);
     state.client.sendTextMessage(message);
     elements.chatInput.value = "";
   } else {
-    addMessage("[Connect to Gemini first]", "system");
+    addMessage("[Connect to Gemini first]");
   }
 }
 
-// Add message to chat
-function addMessage(text, type, append = false) {
-  // Get all div children (messages)
-  const messages = elements.chatContainer.querySelectorAll("div");
-  const lastMessage = messages[messages.length - 1];
-
-  // Check if we should append to the last message
-  if (append && lastMessage && lastMessage.className === type) {
-    // Append to existing message of the same type
-    lastMessage.textContent += text;
-  } else {
-    // Create new message
-    const message = createMessage(text, type);
-    elements.chatContainer.appendChild(message);
-  }
-
-  elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+// Show a fleeting status message (overwrites, does not accumulate)
+function addMessage(text) {
+  updateStatus("connectionStatus", text);
 }
 
 // Update volume

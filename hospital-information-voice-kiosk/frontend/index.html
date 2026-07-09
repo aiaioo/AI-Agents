@@ -116,12 +116,19 @@
       color: var(--text-secondary);
     }
 
-    /* ─── Media row (viz + video side by side) ─── */
+    /* ─── Media row (audio viz) ─── */
     #mediaRow {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 24px;
+      margin: 0 0 12px;
+    }
+
+    /* ─── Video container (moved here from media row) ─── */
+    #videoContainer {
+      display: flex;
+      justify-content: center;
       margin: 0 0 12px;
     }
 
@@ -169,72 +176,6 @@
     #volume {
       accent-color: var(--accent);
       cursor: pointer;
-    }
-
-    /* ─── Chat container ─── */
-    #chatContainer {
-      height: 300px;
-      overflow-y: auto;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface);
-      color: var(--text-primary);
-      line-height: 1.6;
-      transition: background 0.25s, border-color 0.25s, color 0.25s;
-    }
-
-    /* ─── Chat message badges ─── */
-    .user-transcript::before {
-      content: "YOU";
-      background: #f4b400;
-      color: #1c1400;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      border-radius: var(--radius);
-      padding: 1px 5px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    .user::before {
-      content: "USER";
-      background: #0f9d58;
-      color: #ffffff;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      border-radius: var(--radius);
-      padding: 1px 5px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    .assistant::before {
-      content: "GEMINI";
-      background: #4285f4;
-      color: #ffffff;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      border-radius: var(--radius);
-      padding: 1px 5px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    .system::before {
-      content: "SYSTEM";
-      background: #db4437;
-      color: #ffffff;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      border-radius: var(--radius);
-      padding: 1px 5px;
-      margin-right: 6px;
-      vertical-align: middle;
     }
 
     /* ─── Control icon buttons ─── */
@@ -322,8 +263,6 @@
           <canvas id="aiAudioViz" width="260" height="48"></canvas>
         </div>
       </div>
-
-      <video id="videoPreview" autoplay playsinline muted hidden width="400"></video>
     </div>
 
     <div id="volumeControl">
@@ -332,10 +271,8 @@
       <span id="volumeValue">80%</span>
     </div>
 
-    <h2>Chat</h2>
-
-    <div id="chatContainer">
-      <div>Click the microphone icon to connect and start chatting</div>
+    <div id="videoContainer">
+      <video id="videoPreview" autoplay playsinline muted hidden width="400"></video>
     </div>
 
     <div id="controlButtons">
