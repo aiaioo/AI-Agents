@@ -342,65 +342,6 @@ class VideoStreamer extends BaseVideoCapture {
 }
 
 /**
- * Screen Capture - Captures and streams screen/window
- */
-class ScreenCapture extends BaseVideoCapture {
-  /**
-   * Start screen capture
-   * @param {Object} options - { fps: number, width: number, height: number, quality: number }
-   */
-  async start(options = {}) {
-    try {
-      const {
-        fps = 1,
-        width = 1280,
-        height = 720,
-        quality = 0.7
-      } = options;
-
-      this.fps = fps;
-      this.quality = quality;
-
-      // Get screen capture permission
-      this.mediaStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          width: { ideal: width },
-          height: { ideal: height },
-        },
-        audio: false,
-      });
-
-      // Initialize video and canvas elements
-      this.initializeElements(width, height);
-
-      // Wait for video to be ready
-      await this.waitForVideoReady();
-
-      // Start capturing frames
-      this.isStreaming = true;
-      this.startCapturing();
-
-      // Handle stream end (user stops sharing)
-      this.mediaStream.getVideoTracks()[0].onended = () => {
-        console.log("User stopped screen sharing");
-        this.stop();
-      };
-
-      console.log("🖥️ Screen capture started at", fps, "fps");
-      return this.video; // Return video element for preview
-    } catch (error) {
-      console.error("Failed to start screen capture:", error);
-      throw error;
-    }
-  }
-
-  stop() {
-    super.stop();
-    console.log("🛑 Screen capture stopped");
-  }
-}
-
-/**
  * Audio Player - Plays audio responses from Gemini
  */
 class AudioPlayer {

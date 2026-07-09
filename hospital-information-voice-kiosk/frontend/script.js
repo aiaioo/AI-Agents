@@ -45,7 +45,6 @@ const state = {
   client: null,
   audio: { streamer: null, player: null, isStreaming: false },
   video: { streamer: null, isStreaming: false },
-  screen: { capture: null, isSharing: false },
   user: { speaking: false, animationId: null },
   ai: { speaking: false, animationId: null },
 };
@@ -75,10 +74,7 @@ function initDOM() {
     "connectionStatus",
     "startAudioBtn",
     "startVideoBtn",
-    "startScreenBtn",
     "videoPreview",
-    "micSelect",
-    "cameraSelect",
     "volume",
     "volumeValue",
     "chatContainer",
@@ -96,43 +92,6 @@ function initDOM() {
   ids.forEach((id) => {
     elements[id] = document.getElementById(id);
   });
-}
-
-// Populate media device selectors
-async function populateMediaDevices() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-
-    // Clear existing options
-    elements.micSelect.innerHTML =
-      '<option value="">Default Microphone</option>';
-    elements.cameraSelect.innerHTML =
-      '<option value="">Default Camera</option>';
-
-    // Add audio input devices
-    devices
-      .filter((device) => device.kind === "audioinput")
-      .forEach((device) => {
-        const option = document.createElement("option");
-        option.value = device.deviceId;
-        option.textContent =
-          device.label || `Microphone ${device.deviceId.substr(0, 8)}`;
-        elements.micSelect.appendChild(option);
-      });
-
-    // Add video input devices
-    devices
-      .filter((device) => device.kind === "videoinput")
-      .forEach((device) => {
-        const option = document.createElement("option");
-        option.value = device.deviceId;
-        option.textContent =
-          device.label || `Camera ${device.deviceId.substr(0, 8)}`;
-        elements.cameraSelect.appendChild(option);
-      });
-  } catch (error) {
-    console.error("Error enumerating devices:", error);
-  }
 }
 
 // Create reusable message element
@@ -242,7 +201,6 @@ async function connect() {
     // Initialize media handlers
     state.audio.streamer = new AudioStreamer(state.client);
     state.video.streamer = new VideoStreamer(state.client);
-    state.screen.capture = new ScreenCapture(state.client);
     state.audio.player = new AudioPlayer();
     await state.audio.player.init();
 
@@ -264,12 +222,10 @@ function disconnect() {
   // Stop all streams
   if (state.audio.streamer) state.audio.streamer.stop();
   if (state.video.streamer) state.video.streamer.stop();
-  if (state.screen.capture) state.screen.capture.stop();
 
   // Reset states
   state.audio.isStreaming = false;
   state.video.isStreaming = false;
-  state.screen.isSharing = false;
 
   // Update UI
   updateStatus("connectionStatus", "Disconnected");
@@ -278,8 +234,6 @@ function disconnect() {
   elements.startAudioBtn.title = "Start microphone";
   elements.startVideoBtn.classList.remove("active");
   elements.startVideoBtn.title = "Start camera";
-  elements.startScreenBtn.classList.remove("active");
-  elements.startScreenBtn.title = "Share screen";
 
   elements.videoPreview.hidden = true;
   elements.videoPreview.srcObject = null;
@@ -519,8 +473,7 @@ async function toggleAudio() {
   if (!state.audio.isStreaming) {
     try {
       await connect();
-      const selectedMicId = elements.micSelect.value;
-      await state.audio.streamer.start(selectedMicId);
+      await state.audio.streamer.start();
       state.audio.isStreaming = true;
       elements.startAudioBtn.classList.add("active");
       elements.startAudioBtn.title = "Stop microphone";
@@ -550,13 +503,10 @@ async function toggleVideo() {
       }
 
       if (state.video.streamer) {
-        // Get selected camera device ID
-        const selectedCameraId = elements.cameraSelect.value;
         const video = await state.video.streamer.start({
           fps: 1,
           width: 640,
           height: 480,
-          deviceId: selectedCameraId || null,
         });
         state.video.isStreaming = true;
 
@@ -580,47 +530,6 @@ async function toggleVideo() {
     elements.startVideoBtn.classList.remove("active");
     elements.startVideoBtn.title = "Start camera";
     addMessage("[Camera off]", "system");
-  }
-}
-
-// Toggle screen
-async function toggleScreen() {
-  if (!state.screen.isSharing) {
-    try {
-      // Initialize capture if needed
-      if (!state.screen.capture && state.client) {
-        state.screen.capture = new ScreenCapture(state.client);
-      }
-
-      if (state.screen.capture) {
-        const video = await state.screen.capture.start({ fps: 0.5 });
-        state.screen.isSharing = true;
-
-        // Show screen preview in the same video element
-        elements.videoPreview.srcObject = video.srcObject;
-        elements.videoPreview.hidden = false;
-        elements.startScreenBtn.classList.add("active");
-        elements.startScreenBtn.title = "Stop sharing screen";
-        addMessage("[Screen sharing on]", "system");
-      } else {
-        addMessage("[Connect to Gemini first]", "system");
-      }
-    } catch (error) {
-      addMessage("[Screen share error: " + error.message + "]", "system");
-    }
-  } else {
-    if (state.screen.capture) state.screen.capture.stop();
-    state.screen.isSharing = false;
-
-    // Hide preview if not using camera
-    if (!state.video.isStreaming) {
-      elements.videoPreview.srcObject = null;
-      elements.videoPreview.hidden = true;
-    }
-
-    elements.startScreenBtn.classList.remove("active");
-    elements.startScreenBtn.title = "Share screen";
-    addMessage("[Screen sharing off]", "system");
   }
 }
 
@@ -677,7 +586,6 @@ function updateTemperature() {
 function initEventListeners() {
   elements.startAudioBtn.addEventListener("click", toggleAudio);
   elements.startVideoBtn.addEventListener("click", toggleVideo);
-  elements.startScreenBtn.addEventListener("click", toggleScreen);
   //elements.sendBtn.addEventListener("click", sendMessage);
   elements.volume.addEventListener("input", updateVolume);
   //elements.temperature.addEventListener("input", updateTemperature);
@@ -691,6 +599,5 @@ function initEventListeners() {
 window.addEventListener("DOMContentLoaded", () => {
   initDOM();
   initEventListeners();
-  populateMediaDevices();
   updateStatus("debugInfo", "Application initialized");
 });
