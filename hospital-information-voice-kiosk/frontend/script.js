@@ -73,7 +73,6 @@ function initDOM() {
     //"activityHandling",
     "connectionStatus",
     "startAudioBtn",
-    "startVideoBtn",
     "videoPreview",
     "volume",
     "volumeValue",
@@ -223,8 +222,6 @@ function disconnect() {
 
   elements.startAudioBtn.classList.remove("active");
   elements.startAudioBtn.title = "Start microphone";
-  elements.startVideoBtn.classList.remove("active");
-  elements.startVideoBtn.title = "Start camera";
 
   elements.videoPreview.hidden = true;
   elements.videoPreview.srcObject = null;
@@ -459,7 +456,7 @@ function handleError(error) {
   updateStatus("debugInfo", "Error: " + error);
 }
 
-// Toggle audio
+// Toggle audio (also starts/stops the camera alongside the microphone)
 async function toggleAudio() {
   if (!state.audio.isStreaming) {
     try {
@@ -470,6 +467,22 @@ async function toggleAudio() {
       elements.startAudioBtn.title = "Stop microphone";
       addMessage("[Microphone on]");
       startInputVisualization();
+
+      try {
+        if (!state.video.streamer && state.client) {
+          state.video.streamer = new VideoStreamer(state.client);
+        }
+        const video = await state.video.streamer.start({
+          fps: 1,
+          width: 640,
+          height: 480,
+        });
+        state.video.isStreaming = true;
+        elements.videoPreview.srcObject = video.srcObject;
+        elements.videoPreview.hidden = false;
+      } catch (videoError) {
+        console.error("Failed to start camera:", videoError);
+      }
     } catch (error) {
       addMessage("[Audio error: " + error.message + "]");
     }
@@ -481,46 +494,6 @@ async function toggleAudio() {
     elements.startAudioBtn.title = "Start microphone";
     addMessage("[Microphone off]");
     disconnect();
-  }
-}
-
-// Toggle video
-async function toggleVideo() {
-  if (!state.video.isStreaming) {
-    try {
-      // Initialize streamer if needed
-      if (!state.video.streamer && state.client) {
-        state.video.streamer = new VideoStreamer(state.client);
-      }
-
-      if (state.video.streamer) {
-        const video = await state.video.streamer.start({
-          fps: 1,
-          width: 640,
-          height: 480,
-        });
-        state.video.isStreaming = true;
-
-        elements.videoPreview.srcObject = video.srcObject;
-        elements.videoPreview.hidden = false;
-        elements.startVideoBtn.classList.add("active");
-        elements.startVideoBtn.title = "Stop camera";
-        addMessage("[Camera on]");
-      } else {
-        addMessage("[Connect to Gemini first]");
-      }
-    } catch (error) {
-      addMessage("[Video error: " + error.message + "]");
-    }
-  } else {
-    if (state.video.streamer) state.video.streamer.stop();
-    state.video.isStreaming = false;
-
-    elements.videoPreview.srcObject = null;
-    elements.videoPreview.hidden = true;
-    elements.startVideoBtn.classList.remove("active");
-    elements.startVideoBtn.title = "Start camera";
-    addMessage("[Camera off]");
   }
 }
 
@@ -562,7 +535,6 @@ function updateTemperature() {
 // Event listeners
 function initEventListeners() {
   elements.startAudioBtn.addEventListener("click", toggleAudio);
-  elements.startVideoBtn.addEventListener("click", toggleVideo);
   //elements.sendBtn.addEventListener("click", sendMessage);
   elements.volume.addEventListener("input", updateVolume);
   //elements.temperature.addEventListener("input", updateTemperature);
