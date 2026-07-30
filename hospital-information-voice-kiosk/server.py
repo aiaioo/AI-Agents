@@ -25,7 +25,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     print("⚠️ Warning: GEMINI_API_KEY not found in environment. Please set it in .env or as an environment variable.")
     # Fallback to default client which might pick up GOOGLE_API_KEY
-    client = genai.Client(http_options={"api_version": "v1alpha"})
+    client = genai.Client(http_options={"api_version": "v1beta"})
 else:
     client = genai.Client(api_key=GEMINI_API_KEY, http_options={"api_version": "v1alpha"})
 
@@ -45,7 +45,10 @@ async def get_ephemeral_token(request):
         expire_time = now + datetime.timedelta(minutes=30)
         
         # Create an ephemeral token
-        token = client.auth_tokens.create(
+        # Note: the sync client.auth_tokens.create() deadlocks when called
+        # from inside an already-running asyncio event loop (aiohttp's loop),
+        # so we use the async client here instead.
+        token = await client.aio.auth_tokens.create(
             config={
                 "uses": 1,
                 "expire_time": expire_time.isoformat(),
